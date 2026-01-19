@@ -1,10 +1,9 @@
-<?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit;
-}
 require_once 'db.php';
+
+if (!isset($_SESSION['user_id'])) {
+header("Location: index.php");
+exit;
+}
 
 // Fetch Members
 $stmt = $pdo->query("SELECT * FROM members ORDER BY join_date DESC");

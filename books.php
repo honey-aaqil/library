@@ -1,10 +1,9 @@
-<?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit;
-}
 require_once 'db.php';
+
+if (!isset($_SESSION['user_id'])) {
+header("Location: index.php");
+exit;
+}
 
 // Fetch Books
 $stmt = $pdo->query("SELECT * FROM books ORDER BY created_at DESC");

@@ -1,62 +1,61 @@
-<?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit;
-}
 require_once 'db.php';
 
+if (!isset($_SESSION['user_id'])) {
+header("Location: index.php");
+exit;
+}
+
 $member = [
-    'id' => '',
-    'full_name' => '',
-    'email' => '',
-    'phone' => ''
+'id' => '',
+'full_name' => '',
+'email' => '',
+'phone' => ''
 ];
 $is_edit = false;
 
 if (isset($_GET['id'])) {
-    $stmt = $pdo->prepare("SELECT * FROM members WHERE id = ?");
-    $stmt->execute([$_GET['id']]);
-    $fetch_member = $stmt->fetch();
-    if ($fetch_member) {
-        $member = $fetch_member;
-        $is_edit = true;
-    }
+$stmt = $pdo->prepare("SELECT * FROM members WHERE id = ?");
+$stmt->execute([$_GET['id']]);
+$fetch_member = $stmt->fetch();
+if ($fetch_member) {
+$member = $fetch_member;
+$is_edit = true;
+}
 }
 
 $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $full_name = trim($_POST['full_name']);
-    $email = trim($_POST['email']);
-    $phone = trim($_POST['phone']);
+$full_name = trim($_POST['full_name']);
+$email = trim($_POST['email']);
+$phone = trim($_POST['phone']);
 
-    if (empty($full_name) || empty($email)) {
-        $error = "Name and Email are required.";
-    } else {
-        try {
-            if ($is_edit) {
-                $sql = "UPDATE members SET full_name=?, email=?, phone=? WHERE id=?";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute([$full_name, $email, $phone, $member['id']]);
-                $success = "Member updated successfully!";
-                $member = array_merge($member, $_POST);
-            } else {
-                $sql = "INSERT INTO members (full_name, email, phone) VALUES (?, ?, ?)";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute([$full_name, $email, $phone]);
-                $success = "Member added successfully!";
-                $member = ['id' => '', 'full_name' => '', 'email' => '', 'phone' => ''];
-            }
-        } catch (PDOException $e) {
-            if ($e->getCode() == 23000) { // Duplicate entry
-                $error = "Email already exists.";
-            } else {
-                $error = "Database Error: " . $e->getMessage();
-            }
-        }
-    }
+if (empty($full_name) || empty($email)) {
+$error = "Name and Email are required.";
+} else {
+try {
+if ($is_edit) {
+$sql = "UPDATE members SET full_name=?, email=?, phone=? WHERE id=?";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$full_name, $email, $phone, $member['id']]);
+$success = "Member updated successfully!";
+$member = array_merge($member, $_POST);
+} else {
+$sql = "INSERT INTO members (full_name, email, phone) VALUES (?, ?, ?)";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$full_name, $email, $phone]);
+$success = "Member added successfully!";
+$member = ['id' => '', 'full_name' => '', 'email' => '', 'phone' => ''];
+}
+} catch (PDOException $e) {
+if ($e->getCode() == 23000) { // Duplicate entry
+$error = "Email already exists.";
+} else {
+$error = "Database Error: " . $e->getMessage();
+}
+}
+}
 }
 
 include 'header.php';

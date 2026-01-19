@@ -1,10 +1,9 @@
-<?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit;
-}
 require_once 'db.php';
+
+if (!isset($_SESSION['user_id'])) {
+header("Location: index.php");
+exit;
+}
 
 // Fetch Books (Available > 0)
 $books_stmt = $pdo->query("SELECT id, title FROM books WHERE available_qty > 0 ORDER BY title ASC");
@@ -18,47 +17,48 @@ $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $book_id = $_POST['book_id'];
-    $member_id = $_POST['member_id'];
-    $return_date = $_POST['return_date'];
+$book_id = $_POST['book_id'];
+$member_id = $_POST['member_id'];
+$return_date = $_POST['return_date'];
 
-    if (empty($book_id) || empty($member_id) || empty($return_date)) {
-        $error = "All fields are required.";
-    } else {
-        try {
-            $pdo->beginTransaction();
+if (empty($book_id) || empty($member_id) || empty($return_date)) {
+$error = "All fields are required.";
+} else {
+try {
+$pdo->beginTransaction();
 
-            // Double check availability
-            $check_stmt = $pdo->prepare("SELECT available_qty FROM books WHERE id = ?");
-            $check_stmt->execute([$book_id]);
-            $qty = $check_stmt->fetchColumn();
+// Double check availability
+$check_stmt = $pdo->prepare("SELECT available_qty FROM books WHERE id = ?");
+$check_stmt->execute([$book_id]);
+$qty = $check_stmt->fetchColumn();
 
-            if ($qty > 0) {
-                // Create Transaction
-                $sql = "INSERT INTO transactions (book_id, member_id, issue_date, return_date, status) VALUES (?, ?, CURDATE(), ?, 'issued')";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute([$book_id, $member_id, $return_date]);
+if ($qty > 0) {
+// Create Transaction
+$sql = "INSERT INTO transactions (book_id, member_id, issue_date, return_date, status) VALUES (?, ?, CURDATE(), ?,
+'issued')";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$book_id, $member_id, $return_date]);
 
-                // Update Book Stock
-                $update_sql = "UPDATE books SET available_qty = available_qty - 1 WHERE id = ?";
-                $update_stmt = $pdo->prepare($update_sql);
-                $update_stmt->execute([$book_id]);
+// Update Book Stock
+$update_sql = "UPDATE books SET available_qty = available_qty - 1 WHERE id = ?";
+$update_stmt = $pdo->prepare($update_sql);
+$update_stmt->execute([$book_id]);
 
-                $pdo->commit();
-                $success = "Book issued successfully!";
+$pdo->commit();
+$success = "Book issued successfully!";
 
-                // Refresh book list
-                $books_stmt = $pdo->query("SELECT id, title FROM books WHERE available_qty > 0 ORDER BY title ASC");
-                $books = $books_stmt->fetchAll();
-            } else {
-                $pdo->rollBack();
-                $error = "Book is out of stock.";
-            }
-        } catch (PDOException $e) {
-            $pdo->rollBack();
-            $error = "Database Error: " . $e->getMessage();
-        }
-    }
+// Refresh book list
+$books_stmt = $pdo->query("SELECT id, title FROM books WHERE available_qty > 0 ORDER BY title ASC");
+$books = $books_stmt->fetchAll();
+} else {
+$pdo->rollBack();
+$error = "Book is out of stock.";
+}
+} catch (PDOException $e) {
+$pdo->rollBack();
+$error = "Database Error: " . $e->getMessage();
+}
+}
 }
 
 include 'header.php';

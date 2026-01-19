@@ -1,17 +1,16 @@
-<?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit;
-}
 require_once 'db.php';
 
+if (!isset($_SESSION['user_id'])) {
+header("Location: index.php");
+exit;
+}
+
 // Fetch Transactions with Joins
-$sql = "SELECT t.*, b.title as book_title, m.full_name as member_name 
-        FROM transactions t 
-        JOIN books b ON t.book_id = b.id 
-        JOIN members m ON t.member_id = m.id 
-        ORDER BY t.issue_date DESC";
+$sql = "SELECT t.*, b.title as book_title, m.full_name as member_name
+FROM transactions t
+JOIN books b ON t.book_id = b.id
+JOIN members m ON t.member_id = m.id
+ORDER BY t.issue_date DESC";
 $stmt = $pdo->query($sql);
 $transactions = $stmt->fetchAll();
 
