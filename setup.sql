@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS members (
     id INT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NULL,
     phone VARCHAR(20),
     join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -40,7 +41,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     issue_date DATE NOT NULL,
     return_date DATE, -- Expected return date
     returned_on DATE, -- Actual return date (NULL if not returned)
-    status ENUM('issued', 'returned') DEFAULT 'issued',
+    status ENUM('pending', 'issued', 'returned', 'rejected') DEFAULT 'pending',
     FOREIGN KEY (book_id) REFERENCES books(id),
     FOREIGN KEY (member_id) REFERENCES members(id)
 );

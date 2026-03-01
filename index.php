@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($username) || empty($password)) {
         $error = "Please fill all fields.";
     } else {
+        // Check if admin
         $stmt = $pdo->prepare("SELECT id, username, password FROM users WHERE username = :username");
         $stmt->execute(['username' => $username]);
         $user = $stmt->fetch();
@@ -21,10 +22,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
+            $_SESSION['role'] = 'admin';
             header("Location: dashboard.php");
             exit;
         } else {
-            $error = "Invalid username or password.";
+            // Check if member (using email)
+            $stmt = $pdo->prepare("SELECT id, email, password, full_name FROM members WHERE email = :email");
+            $stmt->execute(['email' => $username]);
+            $member = $stmt->fetch();
+
+            if ($member && password_verify($password, $member['password'])) {
+                $_SESSION['user_id'] = $member['id'];
+                $_SESSION['username'] = $member['full_name']; // Display full name
+                $_SESSION['role'] = 'member';
+                header("Location: dashboard.php");
+                exit;
+            } else {
+                $error = "Invalid username/email or password.";
+            }
         }
     }
 }
@@ -62,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <form method="POST" action="">
                 <div class="form-group">
-                    <label>Username</label>
+                    <label>Username or Email</label>
                     <input type="text" name="username" required>
                 </div>
                 <div class="form-group">
@@ -74,6 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     Sign In
                 </button>
             </form>
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Not a member yet? <a href="signup.php" style="color: var(--primary-light); text-decoration: none;">Sign Up</a></p>
+            </div>
         </div>
     </div>
 
